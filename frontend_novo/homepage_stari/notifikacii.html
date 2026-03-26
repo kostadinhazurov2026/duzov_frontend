@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="Homepage.css">
+    <title>Нотификации</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a class="brand" href="Homepage.html" aria-label="Начало">
+                <span class="brand-mark" aria-hidden="true"></span>
+                <span class="brand-text">Marketplace</span>
+            </a>
+            <nav class="topbar-actions">
+                <a class="icon-btn" href="Homepage.html"><span class="icon">↩</span><span class="label">Към началото</span></a>
+                <a class="icon-btn primary" href="obyava.html"><span class="icon">＋</span><span class="label">Нова обява</span></a>
+                <a class="icon-btn" href="notifikacii.html"><span class="icon">🔔</span><span class="label">Нотификации</span></a>
+                <a class="icon-btn" href="profil.html"><span class="icon">👤</span><span class="label">Профил</span></a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page notifications-page">
+        <section class="panel-card">
+            <div class="notify-section-head">
+                <div class="filter-title">Към теб</div>
+                <span class="notify-counter">ВХОДЯЩИ</span>
+            </div>
+            <p class="filter-subtitle">Кой иска да купи от теб и от кого ти искаш да купиш.</p>
+            <div id="inboxList" class="notify-list"></div>
+        </section>
+
+        <section class="panel-card">
+            <div class="notify-section-head">
+                <div class="filter-title">От теб</div>
+                <span class="notify-counter">ИЗХОДЯЩИ</span>
+            </div>
+            <p class="filter-subtitle">Активни и изпратени запитвания.</p>
+            <div id="outboxList" class="notify-list"></div>
+        </section>
+    </main>
+    <script src="notifikacii.js" defer></script>
+</body>
+</html>
