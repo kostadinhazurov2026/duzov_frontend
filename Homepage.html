@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketplace • Производители и купувачи</title>
+    <meta name="description" content="Търси по продукт, регион, количество и максимална цена и виж резултатите отдолу.">
+    <link rel="stylesheet" href="Homepage.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="topbar" aria-label="Горно меню">
+        <div class="topbar-inner">
+            <a class="brand" href="Homepage.html" aria-label="Начало">
+                <span class="brand-mark" aria-hidden="true"></span>
+                <span class="brand-text">Marketplace</span>
+            </a>
+
+            <nav class="topbar-actions home-actions" aria-label="Действия">
+                <a id="newAdBtn" class="icon-btn primary" href="obyava.html">
+                    <span class="icon" aria-hidden="true">＋</span>
+                    <span class="label">Нова обява</span>
+                </a>
+                
+                <a id="notifBtn" class="icon-btn" href="notifikacii.html" aria-label="Нотификации">
+                    <span class="icon" aria-hidden="true">🔔</span>
+                    <span class="dot" aria-hidden="true"></span>
+                </a>
+                
+                <a id="profileBtn" class="icon-btn" href="profil.html" aria-label="Профил">
+                    <span class="icon" aria-hidden="true">👤</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page">
+        <form id="searchForm" class="filter-card" autocomplete="off">
+            <div class="filter-head">
+                <div class="filter-title">Упътване</div>
+                <div class="filter-subtitle">Избери филтри (или остави празно) и натисни “Търси”. Всяко поле е отделна кутия с autocomplete.</div>
+            </div>
+
+            <div class="filter-grid">
+                <div class="filter-item">
+                        <label for="productInput">Продукт</label>
+                        <input id="productInput" name="product" list="productsList" placeholder="" class="styled-input">
+                        <datalist id="productsList">
+                            <option value="Домати"></option>
+                            <option value="Краставици"></option>
+                            <option value="Картофи"></option>
+                            <option value="Ябълки"></option>
+                            <option value="Мед"></option>
+                            <option value="Мляко"></option>
+                            <option value="Жито"></option>
+                            <option value="Царевица"></option>
+                            <option value="Слънчоглед"></option>
+                        </datalist>
+                </div>
+
+                <div class="filter-item">
+                        <label for="locationInput">Регион</label>
+                        <input id="locationInput" name="location" list="townsList" placeholder="" class="styled-input">
+                        <datalist id="townsList"></datalist>
+                </div>
+
+                <div class="filter-item">
+                        <label for="quantityInput">Количество</label>
+                        <input id="quantityInput" name="quantity" list="quantityList" placeholder="" class="styled-input">
+                        <datalist id="quantityList">
+                            <option value="10 кг"></option>
+                            <option value="25 кг"></option>
+                            <option value="50 кг"></option>
+                            <option value="100 кг"></option>
+                            <option value="250 кг"></option>
+                            <option value="500 кг"></option>
+                            <option value="1 бр."></option>
+                            <option value="5 бр."></option>
+                            <option value="10 бр."></option>
+                            <option value="25 бр."></option>
+                            <option value="50 бр."></option>
+                            <option value="100 бр."></option>
+                            <option value="1 т"></option>
+                        </datalist>
+                </div>
+
+                <div class="filter-item">
+                        <label for="maxPriceInput">Макс. цена</label>
+                        <input id="maxPriceInput" name="maxPrice" list="maxPriceList" placeholder="" class="styled-input">
+                        <datalist id="maxPriceList">
+                            <option value="1.00"></option>
+                            <option value="1.50"></option>
+                            <option value="2.00"></option>
+                            <option value="2.50"></option>
+                            <option value="3.00"></option>
+                            <option value="5.00"></option>
+                            <option value="10.00"></option>
+                        </datalist>
+                </div>
+                </div>
+
+            <div class="filter-actions">
+                <button id="resetBtn" class="btn btn-ghost" type="button">Изчисти</button>
+                <button id="searchBtn" class="btn btn-primary" type="submit">Търси</button>
+            </div>
+        </form>
+
+        <section class="results-panel" aria-label="Резултати">
+            <div class="results-head">
+                <div class="results-title">Резултати</div>
+                <div id="resultsMeta" class="results-meta"></div>
+            </div>
+
+            <div id="resultsScroll" class="results-scroll" aria-live="polite">
+                <div id="resultsGrid" class="grid-layout"></div>
+
+                <div id="emptyState" class="empty-state" hidden>
+                    <div class="empty-title">Няма намерени резултати</div>
+                    <div class="empty-subtitle">Пробвай с по-общ продукт или премахни част от филтрите.</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="Homepage.js" defer></script>
+</body>
+</html>

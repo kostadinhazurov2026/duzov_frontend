@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="Homepage.css">
+    <title>Нова Обява</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="topbar" aria-label="Горно меню">
+        <div class="topbar-inner">
+            <a class="brand" href="Homepage.html" aria-label="Начало">
+                <span class="brand-mark" aria-hidden="true"></span>
+                <span class="brand-text">Marketplace</span>
+            </a>
+            <nav class="topbar-actions" aria-label="Действия">
+                <a class="icon-btn" href="profil.html"><span class="icon">👤</span><span class="label">Профил</span></a>
+                <a class="icon-btn" href="notifikacii.html"><span class="icon">🔔</span><span class="label">Нотификации</span></a>
+                <a class="icon-btn primary" href="obyava.html"><span class="icon">＋</span><span class="label">Нова обява</span></a>
+                <a class="icon-btn" href="Homepage.html"><span class="icon">↩</span><span class="label">Към началото</span></a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page">
+        <section class="panel-card">
+            <div class="filter-title">Създай обява</div>
+            <p class="filter-subtitle">Попълни детайлите за продукта и запази.</p>
+
+            <form id="offerForm" class="stack" style="margin-top:14px;">
+                <div class="filter-item">
+                    <label for="offerProduct">Продукт</label>
+                    <input id="offerProduct" name="product" class="styled-input" placeholder="" required>
+                </div>
+                <div class="filter-item">
+                    <label for="offerRegion">Регион</label>
+                    <input id="offerRegion" name="region" class="styled-input" placeholder="">
+                </div>
+                <div class="filter-item">
+                    <label for="offerQty">Количество</label>
+                    <input id="offerQty" name="quantity" class="styled-input" placeholder="" required>
+                </div>
+                <div class="filter-item">
+                    <label for="offerPrice">Цена</label>
+                    <input id="offerPrice" name="price" class="styled-input" placeholder="" inputmode="decimal" required>
+                </div>
+                <p id="offerStatus" class="form-status" aria-live="polite"></p>
+                <div class="filter-actions">
+                    <button type="submit" id="offerSaveBtn" class="btn btn-primary">Публикувай</button>
+                </div>
+            </form>
+        </section>
+    </main>
+    <script src="obyava.js" defer></script>
+</body>
+</html>
