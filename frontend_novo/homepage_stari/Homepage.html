@@ -16,20 +16,11 @@
                 <span class="brand-text">Marketplace</span>
             </a>
 
-            <nav class="topbar-actions home-actions" aria-label="Действия">
-                <a id="newAdBtn" class="icon-btn primary" href="obyava.html">
-                    <span class="icon" aria-hidden="true">＋</span>
-                    <span class="label">Нова обява</span>
-                </a>
-                
-                <a id="notifBtn" class="icon-btn" href="notifikacii.html" aria-label="Нотификации">
-                    <span class="icon" aria-hidden="true">🔔</span>
-                    <span class="dot" aria-hidden="true"></span>
-                </a>
-                
-                <a id="profileBtn" class="icon-btn" href="profil.html" aria-label="Профил">
-                    <span class="icon" aria-hidden="true">👤</span>
-                </a>
+            <nav class="topbar-actions" aria-label="Действия">
+                <a class="icon-btn" href="Homepage.html"><span class="icon">↩</span><span class="label">Начало</span></a>
+                <a class="icon-btn" href="obyava.html"><span class="icon">＋</span><span class="label">Нова обява</span></a>
+                <a class="icon-btn" href="notifikacii.html"><span class="icon">🔔</span><span class="label">Нотификации</span></a>
+                <a class="icon-btn" href="profil.html"><span class="icon">👤</span><span class="label">Профил</span></a>
             </nav>
         </div>
     </header>
@@ -37,8 +28,8 @@
     <main class="page">
         <form id="searchForm" class="filter-card" autocomplete="off">
             <div class="filter-head">
-                <div class="filter-title">Упътване</div>
-                <div class="filter-subtitle">Избери филтри (или остави празно) и натисни “Търси”. Всяко поле е отделна кутия с autocomplete.</div>
+                <div class="filter-title">Производители</div>
+                <div class="filter-subtitle">Намери производител по продукт, регион, количество или цена.</div>
             </div>
 
             <div class="filter-grid">
@@ -90,5 +81,6 @@
     </main>
 
     <script src="Homepage.js" defer></script>
+    <script src="nav-active.js" defer></script>
 </body>
 </html>

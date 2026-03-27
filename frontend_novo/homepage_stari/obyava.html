@@ -14,9 +14,9 @@
                 <span class="brand-mark" aria-hidden="true"></span>
                 <span class="brand-text">Marketplace</span>
             </a>
-            <nav class="topbar-actions" aria-label="Действия">
-                <a class="icon-btn" href="Homepage.html"><span class="icon">↩</span><span class="label">Към началото</span></a>
-                <a class="icon-btn primary" href="obyava.html"><span class="icon">＋</span><span class="label">Нова обява</span></a>
+            <nav class="topbar-actions">
+                <a class="icon-btn" href="Homepage.html"><span class="icon">↩</span><span class="label">Начало</span></a>
+                <a class="icon-btn" href="obyava.html"><span class="icon">＋</span><span class="label">Нова обява</span></a>
                 <a class="icon-btn" href="notifikacii.html"><span class="icon">🔔</span><span class="label">Нотификации</span></a>
                 <a class="icon-btn" href="profil.html"><span class="icon">👤</span><span class="label">Профил</span></a>
             </nav>
@@ -24,39 +24,83 @@
     </header>
 
     <main class="page">
-        <section class="panel-card">
-            <div class="filter-title">Създай обява</div>
-            <p class="filter-subtitle">Попълни детайлите за продукта и запази.</p>
+        <section class="panel-card offer-card">
+            <div class="offer-header">
+                <h1 class="filter-title">Създаване на обява</h1>
+            </div>
 
-            <form id="offerForm" class="stack" style="margin-top:14px;">
-                <div class="filter-item">
-                    <label for="offerProduct">Продукт</label>
-                    <input id="offerProduct" name="product" class="styled-input" placeholder="" required>
+            <form id="offerForm" class="offer-form">
+                <!-- Section 1: Image Upload -->
+                <div class="offer-section">
+                    <div class="offer-section-head">
+                        <span class="offer-section-icon">📸</span>
+                        <h2 class="offer-section-title">Снимки на продукта</h2>
+                    </div>
+                    <div class="offer-image-section">
+                        <input type="file" id="offerPhoto" name="photo" class="offer-image-input" accept="image/*">
+                        <label for="offerPhoto" class="offer-image-label">
+                            <div id="offerPhotoPlaceholder" class="offer-image-placeholder">
+                                <p class="offer-placeholder-text">Прикачи снимка</p>
+                                <button type="button" class="btn btn-primary btn-file-select">Избери файл</button>
+                            </div>
+                            <img id="offerPhotoPreview" class="offer-image-preview" alt="Преглед" hidden>
+                        </label>
+                    </div>
                 </div>
-                <div class="filter-item">
-                    <label for="offerRegion">Регион</label>
-                    <input id="offerRegion" name="region" class="styled-input" placeholder="">
+
+                <!-- Section 2: Product Details -->
+                <div class="offer-section">
+                    <div class="offer-section-head">
+                        <span class="offer-section-icon">📋</span>
+                        <h2 class="offer-section-title">Детайли за продукта</h2>
+                    </div>
+                    <div class="offer-details-vertical">
+                        <div class="offer-field">
+                            <label for="offerProduct">Име на продукта</label>
+                            <input id="offerProduct" name="product" class="styled-input" placeholder="Введи текст тук" required>
+                        </div>
+                        <div class="offer-field">
+                            <label for="offerPrice">Цена</label>
+                            <div class="price-wrapper">
+                                <input id="offerPrice" name="price" class="styled-input" placeholder="Введи текст тук" inputmode="decimal" required>
+                                <span class="price-currency">€</span>
+                            </div>
+                        </div>
+                        <div class="offer-field">
+                            <label for="offerQty">Количество</label>
+                            <div class="quantity-wrapper">
+                                <input id="offerQty" name="quantity" class="styled-input" placeholder="Введи текст тук" inputmode="decimal" required>
+                                <span class="quantity-unit">кг</span>
+                            </div>
+                        </div>
+                        <div class="offer-field">
+                            <label for="offerDescription">Описание</label>
+                            <textarea id="offerDescription" name="description" class="styled-textarea" placeholder="Введи описание тук" rows="4"></textarea>
+                        </div>
+                    </div>
                 </div>
-                <div class="filter-item">
-                    <label for="offerQty">Количество</label>
-                    <input id="offerQty" name="quantity" class="styled-input" placeholder="" required>
+
+                <!-- Section 3: Location -->
+                <div class="offer-section">
+                    <div class="offer-section-head">
+                        <span class="offer-section-icon">📍</span>
+                        <h2 class="offer-section-title">Местоположение</h2>
+                    </div>
+                    <div class="offer-field">
+                        <label for="offerRegion">Местоположение</label>
+                        <input id="offerRegion" name="region" class="styled-input" placeholder="Введи текст тук">
+                    </div>
                 </div>
-                <div class="filter-item">
-                    <label for="offerPrice">Цена</label>
-                    <input id="offerPrice" name="price" class="styled-input" placeholder="" inputmode="decimal" required>
-                </div>
-                <div class="filter-item">
-                    <label for="offerPhoto">Снимка на продукта</label>
-                    <input id="offerPhoto" name="photo" type="file" class="styled-input" accept="image/*">
-                    <img id="offerPhotoPreview" class="photo-preview" alt="Преглед на снимка" hidden>
-                </div>
+
+                <!-- Status and Actions -->
                 <p id="offerStatus" class="form-status" aria-live="polite"></p>
-                <div class="filter-actions">
-                    <button type="submit" id="offerSaveBtn" class="btn btn-primary">Публикувай</button>
+                <div class="offer-actions">
+                    <button type="submit" id="offerSaveBtn" class="btn btn-primary btn-publish">Публикувай обява</button>
                 </div>
             </form>
         </section>
     </main>
     <script src="obyava.js" defer></script>
+    <script src="nav-active.js" defer></script>
 </body>
 </html>
