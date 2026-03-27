@@ -161,6 +161,13 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ── FILTER ROW ── */
+.section-card { overflow: visible; }
+
+#searchForm {
+    position: relative;
+    z-index: 50;
+}
+
 .filter-row {
     display: flex;
     align-items: flex-end;
@@ -169,7 +176,7 @@ a { color: inherit; text-decoration: none; }
     flex-wrap: wrap;
     overflow: visible;
     position: relative;
-    z-index: 1;
+    z-index: 60;
 }
 
 .filter-field {
@@ -269,18 +276,20 @@ a { color: inherit; text-decoration: none; }
     position: absolute;
     left: 0;
     right: 0;
-    top: 100%;
-    margin-top: 8px;
+    top: calc(100% + 10px);
     background: var(--card-bg);
     border: 2px solid var(--border-strong);
-    border-radius: 10px;
-    overflow: visible;
+    border-radius: 12px;
+    overflow: hidden;
     z-index: 9999;
     box-shadow: 0 10px 24px rgba(60, 40, 10, 0.18);
     opacity: 0;
     transform: translateY(-6px);
     transform-origin: top center;
     pointer-events: none;
+    padding: 8px;
+    display: grid;
+    gap: 6px;
     transition: opacity 0.22s ease, transform 0.22s ease;
 }
 
@@ -290,17 +299,32 @@ a { color: inherit; text-decoration: none; }
     pointer-events: auto;
 }
 
+/* If there isn't enough space below, open dropdown upwards */
+.custom-dropdown.open-up {
+    top: auto;
+    bottom: calc(100% + 10px);
+    transform-origin: bottom center;
+}
+
+.custom-dropdown.open-up {
+    transform: translateY(0);
+}
+
 .custom-dropdown .dd-option {
-    padding: 10px 14px;
+    padding: 12px 14px;
+    margin: 0;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     transition: background 0.15s ease;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: none;
     color: var(--text-dark);
+    border-radius: 10px;
+    line-height: 1.3;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
 }
-
-.custom-dropdown .dd-option:last-child { border-bottom: none; }
 
 .custom-dropdown .dd-option:hover {
     background: #fff3e0;
@@ -411,7 +435,9 @@ a { color: inherit; text-decoration: none; }
 
 .offer-left { display: flex; flex-direction: column; }
 
-.offer-image-label { cursor: pointer; display: block; }
+.offer-image-wrapper { position: relative; width: 100%; }
+
+.offer-image-label { cursor: pointer; display: block; width: 100%; }
 
 .offer-image-placeholder {
     width: 100%;
@@ -425,6 +451,14 @@ a { color: inherit; text-decoration: none; }
     justify-content: center;
     gap: 10px;
     transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.offer-image-placeholder.photo-loaded {
+    opacity: 0;
+    pointer-events: none;
 }
 
 .offer-image-label:hover .offer-image-placeholder {
@@ -443,11 +477,52 @@ a { color: inherit; text-decoration: none; }
 }
 
 .offer-image-preview {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    aspect-ratio: 4 / 3;
+    height: 100%;
     object-fit: cover;
     border-radius: 14px;
     border: 2px solid var(--border);
+    z-index: 2;
+    opacity: 0;
+    transform: scale(0.98);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: none;
+}
+
+.offer-image-preview.show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.offer-photo-change {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 38px;
+    height: 38px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 3;
+    opacity: 0;
+    transform: scale(0.85);
+    pointer-events: none;
+    transition: all 0.2s ease;
+    font-size: 18px;
+    color: var(--text-dark);
+}
+
+.offer-photo-change.show {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
 }
 
 /* ── OFFER FORM IMAGE UPLOAD ── */

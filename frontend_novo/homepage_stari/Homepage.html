@@ -47,7 +47,7 @@
                 </div>
                 <div class="filter-field dropdown-wrap">
                     <label for="maxPriceInput">Макс. цена</label>
-                    <input id="maxPriceInput" name="maxPrice" placeholder="0.00 лв." class="styled-input" autocomplete="off">
+                    <input id="maxPriceInput" name="maxPrice" placeholder="0.00 €" class="styled-input" autocomplete="off">
                     <div class="custom-dropdown" id="maxPriceDropdown"></div>
                 </div>
                 <div class="filter-buttons">
@@ -65,14 +65,17 @@
             </div>
             <form id="offerForm" class="offer-layout">
                 <div class="offer-left">
-                    <label class="offer-image-label" for="offerPhoto">
-                        <div id="offerPhotoPlaceholder" class="offer-image-placeholder">
-                            <span class="upload-icon-big">📷</span>
-                            <p class="offer-placeholder-text">Прикачи снимка</p>
-                            <span class="btn btn-primary btn-sm">Избери файл</span>
-                        </div>
-                        <img id="offerPhotoPreview" class="offer-image-preview" alt="Преглед" hidden>
-                    </label>
+                    <div class="offer-image-wrapper">
+                        <label class="offer-image-label" for="offerPhoto">
+                            <div id="offerPhotoPlaceholder" class="offer-image-placeholder">
+                                <span class="upload-icon-big">📷</span>
+                                <p class="offer-placeholder-text">Прикачи снимка</p>
+                                <span class="btn btn-primary btn-sm">Избери файл</span>
+                            </div>
+                            <img id="offerPhotoPreview" class="offer-image-preview" alt="Преглед" hidden>
+                        </label>
+                        <button type="button" id="offerPhotoChange" class="offer-photo-change" title="Смени снимка" aria-label="Смени снимка">↻</button>
+                    </div>
                     <input type="file" id="offerPhoto" name="photo" accept="image/*" hidden>
                 </div>
                 <div class="offer-right">
@@ -95,20 +98,20 @@
                             </div>
                         </div>
                         <div class="offer-field">
-                            <label for="offerPrice">Цена</label>
+                            <label for="offerPrice">Цена (€)</label>
                             <div class="input-suffix-wrap">
                                 <input id="offerPrice" name="price" class="styled-input" placeholder="0.00" inputmode="decimal" required>
-                                <span class="input-suffix">лв.</span>
+                                <span class="input-suffix">€</span>
                             </div>
                         </div>
                     </div>
                     <div class="offer-field">
                         <label for="offerDescription">Описание</label>
-                        <textarea id="offerDescription" name="description" class="styled-textarea" placeholder="Разкажи повече за продукта..." rows="3"></textarea>
-                    </div>
-                    <div class="offer-bottom">
-                        <p id="offerStatus" class="form-status"></p>
-                        <button type="submit" id="offerSaveBtn" class="btn btn-accent btn-publish">Публикувай обява</button>
+                        <div class="description-with-button">
+                            <textarea id="offerDescription" name="description" class="styled-textarea" placeholder="Разкажи повече за продукта..." rows="3"></textarea>
+                            <button type="submit" id="offerSaveBtn" class="btn btn-accent btn-publish-inline">Публикувай обява</button>
+                        </div>
+                        <p id="offerStatus" class="form-status" aria-live="polite"></p>
                     </div>
                 </div>
             </form>

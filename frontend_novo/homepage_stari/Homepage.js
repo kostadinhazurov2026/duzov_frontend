@@ -45,7 +45,10 @@ function safeJsonParse(s, fallback) {
 
 function normalizeOffer(offer) {
   const quantity = parseQuantity(offer.quantity)
-  const price = Number(String(offer.price || '').replace(',', '.'))
+  const rawPrice = String(offer.price ?? '')
+  // Supports both numeric prices and strings like "12.34 лв." / "12.34 €"
+  const match = rawPrice.replace(',', '.').match(/-?\d+(?:\.\d+)?/)
+  const price = match ? Number(match[0]) : NaN
   return {
     type: 'offer',
     title: offer.sellerName ? `Обява от ${offer.sellerName}` : `Обява: ${offer.product || 'Продукт'}`,
@@ -78,7 +81,7 @@ function toDataUrl(file) {
 }
 
 // Custom dropdown – shows max 3 filtered options
-function setupDropdown(inputId, dropdownId, options) {
+function setupDropdown(inputId, dropdownId, options, forceOpenUp = false) {
   const input = document.getElementById(inputId)
   const dropdown = document.getElementById(dropdownId)
   if (!input || !dropdown) return
@@ -89,11 +92,32 @@ function setupDropdown(inputId, dropdownId, options) {
       ? options.filter(o => o.toLowerCase().includes(query)).slice(0, 3)
       : options.slice(0, 3)
     dropdown.innerHTML = filtered.map(o => `<div class="dd-option">${escapeHtml(o)}</div>`).join('')
-    if (filtered.length > 0) {
-      dropdown.classList.add('open')
-    } else {
-      dropdown.classList.remove('open')
+    const hasItems = filtered.length > 0
+    dropdown.classList.toggle('open', hasItems)
+    dropdown.classList.toggle('open-up', hasItems && forceOpenUp)
+    if (hasItems) schedulePositionDropdown()
+  }
+
+  function positionDropdown() {
+    if (!dropdown.classList.contains('open')) return
+
+    if (forceOpenUp) return
+
+    const rect = dropdown.getBoundingClientRect()
+    const padding = 10
+    const fitsDown = rect.bottom <= (window.innerHeight - padding)
+
+    if (!fitsDown) {
+      dropdown.classList.add('open-up')
+
+      // If it still doesn't fit (rare), keep it up; user interaction is still usable.
     }
+  }
+
+  let rafPos = 0
+  function schedulePositionDropdown() {
+    cancelAnimationFrame(rafPos)
+    rafPos = requestAnimationFrame(() => positionDropdown())
   }
 
   input.addEventListener('focus', () => renderOptions(input.value))
@@ -108,7 +132,15 @@ function setupDropdown(inputId, dropdownId, options) {
     }
   })
 
-  input.addEventListener('blur', () => { dropdown.classList.remove('open') })
+  // Close dropdown when clicking outside (prevents instant close after focus change)
+  document.addEventListener('pointerdown', (e) => {
+    const target = e.target
+    const isInside = target === input || dropdown.contains(target)
+    if (!isInside) dropdown.classList.remove('open')
+    if (!isInside) dropdown.classList.remove('open-up')
+  }, { capture: true })
+
+  window.addEventListener('resize', schedulePositionDropdown)
 }
 
 // ── SEARCH ──
@@ -193,7 +225,7 @@ async function render(query) {
             </div>
             <p>${escapeHtml(it.location || '')}</p>
             <div class="ad-footer">
-              <span class="price-tag">${escapeHtml(Number(it.price).toFixed(2))} лв.</span>
+              <span class="price-tag">${escapeHtml(Number(it.price).toFixed(2))} €</span>
               <span class="unit-tag">за ${escapeHtml(unitText(it.unit))}</span>
             </div>
             <div class="meta-row">
@@ -223,6 +255,7 @@ function initOfferForm() {
   const photoInput = document.getElementById('offerPhoto')
   const photoPlaceholder = document.getElementById('offerPhotoPlaceholder')
   const photoPreview = document.getElementById('offerPhotoPreview')
+  const photoChangeBtn = document.getElementById('offerPhotoChange')
   const profile = safeJsonParse(localStorage.getItem('mp_profile'), null)
 
   if (!form || !saveBtn) return
@@ -238,18 +271,29 @@ function initOfferForm() {
       try {
         const dataUrl = await toDataUrl(file)
         currentPhotoDataUrl = dataUrl
-        if (photoPlaceholder) photoPlaceholder.hidden = true
-        if (photoPreview) { photoPreview.src = dataUrl; photoPreview.hidden = false }
+        if (photoPlaceholder) photoPlaceholder.classList.add('photo-loaded')
+        if (photoPreview) {
+          photoPreview.src = dataUrl
+          photoPreview.hidden = false
+          photoPreview.classList.add('show')
+        }
+        if (photoChangeBtn) photoChangeBtn.classList.add('show')
       } catch (err) {
         showOfferStatus(err instanceof Error ? err.message : 'Грешка при зареждане', 'error')
       }
     })
   }
 
+  if (photoChangeBtn && photoInput) {
+    photoChangeBtn.addEventListener('click', () => photoInput.click())
+  }
+
   function showOfferStatus(message, type) {
     if (!status) return
-    status.textContent = message
+    const show = Boolean(message)
+    status.textContent = message || ''
     status.className = 'form-status'
+    if (show) status.classList.add('show')
     if (type === 'error') status.classList.add('form-status-error')
     if (type === 'success') status.classList.add('form-status-success')
   }
@@ -281,7 +325,7 @@ function initOfferForm() {
       id: crypto?.randomUUID?.() || String(Date.now()),
       product, region,
       quantity: `${quantity} кг`,
-      price: `${price.toFixed(2)} лв.`,
+      price: Number(price.toFixed(2)),
       description,
       photoDataUrl: currentPhotoDataUrl,
       createdAt: new Date().toISOString(),
@@ -296,8 +340,13 @@ function initOfferForm() {
     // Reset form
     form.reset()
     currentPhotoDataUrl = ''
-    if (photoPlaceholder) photoPlaceholder.hidden = false
-    if (photoPreview) { photoPreview.src = ''; photoPreview.hidden = true }
+    if (photoPlaceholder) photoPlaceholder.classList.remove('photo-loaded')
+    if (photoPreview) {
+      photoPreview.src = ''
+      photoPreview.hidden = true
+      photoPreview.classList.remove('show')
+    }
+    if (photoChangeBtn) photoChangeBtn.classList.remove('show')
     saveBtn.disabled = false
 
     // Refresh results
@@ -313,7 +362,8 @@ function initOfferForm() {
 function init() {
   if (!els.form) return
 
-  setupDropdown('productInput', 'productDropdown', SEED.products)
+  // Force "product" dropdown to open upwards so it stays fully visible
+  setupDropdown('productInput', 'productDropdown', SEED.products, true)
   setupDropdown('locationInput', 'locationDropdown', SEED.towns)
   setupDropdown('quantityInput', 'quantityDropdown', SEED.quantities)
   setupDropdown('maxPriceInput', 'maxPriceDropdown', SEED.prices)
