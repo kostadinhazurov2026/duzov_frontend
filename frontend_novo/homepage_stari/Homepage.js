@@ -11,23 +11,8 @@ const SEED = {
   ],
 }
 
-const els = {
-  form: document.getElementById('searchForm'),
-  resetBtn: document.getElementById('resetBtn'),
-  resultsGrid: document.getElementById('resultsGrid'),
-  resultsMeta: document.getElementById('resultsMeta'),
-  emptyState: document.getElementById('emptyState'),
-  resultsScroll: document.getElementById('resultsScroll'),
-  brandLink: document.querySelector('.brand'),
-}
-
 function escapeHtml(s) {
-  return String(s ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
+  return String(s ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;')
 }
 
 function unitText(unit) {
@@ -51,11 +36,11 @@ function parseQuantity(text) {
   if (!src) return { raw: '', amount: NaN, unit: '' }
   const match = src.match(/(\d+(?:[.,]\d+)?)\s*(кг|kg|бр\.?|pcs?|т|t)/i)
   if (!match) return { raw: src, amount: NaN, unit: '' }
-  return {
-    raw: src,
-    amount: Number(match[1].replace(',', '.')),
-    unit: parseUnit(match[2]),
-  }
+  return { raw: src, amount: Number(match[1].replace(',', '.')), unit: parseUnit(match[2]) }
+}
+
+function safeJsonParse(s, fallback) {
+  try { return JSON.parse(s) } catch { return fallback }
 }
 
 function normalizeOffer(offer) {
@@ -80,12 +65,19 @@ function loadOffers() {
     const offers = JSON.parse(localStorage.getItem('mp_offers') || '[]')
     if (!Array.isArray(offers)) return []
     return offers.map(normalizeOffer)
-  } catch {
-    return []
-  }
+  } catch { return [] }
 }
 
-// Custom dropdown logic
+function toDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result || ''))
+    reader.onerror = () => reject(new Error('Грешка при зареждане на снимка.'))
+    reader.readAsDataURL(file)
+  })
+}
+
+// Custom dropdown – shows max 3 filtered options
 function setupDropdown(inputId, dropdownId, options) {
   const input = document.getElementById(inputId)
   const dropdown = document.getElementById(dropdownId)
@@ -93,7 +85,9 @@ function setupDropdown(inputId, dropdownId, options) {
 
   function renderOptions(filter) {
     const query = (filter || '').toLowerCase()
-    const filtered = query ? options.filter(o => o.toLowerCase().includes(query)) : options
+    const filtered = query
+      ? options.filter(o => o.toLowerCase().includes(query)).slice(0, 3)
+      : options.slice(0, 3)
     dropdown.innerHTML = filtered.map(o => `<div class="dd-option">${escapeHtml(o)}</div>`).join('')
     if (filtered.length > 0) {
       dropdown.classList.add('open')
@@ -114,9 +108,18 @@ function setupDropdown(inputId, dropdownId, options) {
     }
   })
 
-  input.addEventListener('blur', () => {
-    dropdown.classList.remove('open')
-  })
+  input.addEventListener('blur', () => { dropdown.classList.remove('open') })
+}
+
+// ── SEARCH ──
+const els = {
+  form: document.getElementById('searchForm'),
+  resetBtn: document.getElementById('resetBtn'),
+  resultsGrid: document.getElementById('resultsGrid'),
+  resultsMeta: document.getElementById('resultsMeta'),
+  emptyState: document.getElementById('emptyState'),
+  resultsScroll: document.getElementById('resultsScroll'),
+  brandLink: document.querySelector('.brand'),
 }
 
 function parseForm() {
@@ -132,10 +135,10 @@ function parseForm() {
 function filterItems(q) {
   const parsedQueryQty = parseQuantity(q.quantity)
   return [...loadOffers(), ...SEED.items]
-    .filter((it) => !q.product || String(it.product || '').toLowerCase().includes(q.product))
-    .filter((it) => !q.location || String(it.location || '').toLowerCase().includes(q.location))
-    .filter((it) => !Number.isFinite(q.maxPrice) || Number(it.price) <= q.maxPrice)
-    .filter((it) => {
+    .filter(it => !q.product || String(it.product || '').toLowerCase().includes(q.product))
+    .filter(it => !q.location || String(it.location || '').toLowerCase().includes(q.location))
+    .filter(it => !Number.isFinite(q.maxPrice) || Number(it.price) <= q.maxPrice)
+    .filter(it => {
       if (!q.quantity) return true
       const itemQty = Number.isFinite(it.amount) ? { amount: it.amount, unit: it.unit } : parseQuantity(it.quantityLabel || '')
       if (parsedQueryQty.unit && itemQty.unit && parsedQueryQty.unit !== itemQty.unit) return false
@@ -150,16 +153,12 @@ function render(items) {
   els.emptyState.hidden = true
   if (els.resultsMeta) els.resultsMeta.textContent = items.length ? `Намерени: ${items.length}` : ''
 
-  if (!items.length) {
-    els.emptyState.hidden = false
-    return
-  }
+  if (!items.length) { els.emptyState.hidden = false; return }
 
-  const html = items.map((it, i) => {
+  els.resultsGrid.innerHTML = items.map((it, i) => {
     const isFarmer = it.type === 'farmer'
     const title = isFarmer ? it.name : it.title
     const badge = isFarmer ? 'Производител' : 'Обява'
-
     return `
       <article class="ad-card" style="animation-delay:${Math.min(i * 60, 260)}ms">
         <div class="ad-image-box">${escapeHtml(it.product || 'Продукт')}</div>
@@ -177,31 +176,110 @@ function render(items) {
             <span class="meta-chip">Продукт: ${escapeHtml(it.product)}</span>
             ${it.quantityLabel ? `<span class="meta-chip">Количество: ${escapeHtml(it.quantityLabel)}</span>` : ''}
             <span class="meta-chip">Рейтинг: ${escapeHtml(Number(it.rating).toFixed(1))}</span>
-            ${(it.tags || []).slice(0, 2).map((t) => `<span class="meta-chip">${escapeHtml(t)}</span>`).join('')}
+            ${(it.tags || []).slice(0, 2).map(t => `<span class="meta-chip">${escapeHtml(t)}</span>`).join('')}
           </div>
         </div>
-      </article>
-    `
+      </article>`
   }).join('')
 
-  els.resultsGrid.innerHTML = html
   els.resultsScroll.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-function onSubmit(e) {
-  e.preventDefault()
-  const q = parseForm()
-  const items = filterItems(q)
-  render(items)
+// ── OFFER FORM ──
+function initOfferForm() {
+  const form = document.getElementById('offerForm')
+  const saveBtn = document.getElementById('offerSaveBtn')
+  const status = document.getElementById('offerStatus')
+  const photoInput = document.getElementById('offerPhoto')
+  const photoPlaceholder = document.getElementById('offerPhotoPlaceholder')
+  const photoPreview = document.getElementById('offerPhotoPreview')
+  const profile = safeJsonParse(localStorage.getItem('mp_profile'), null)
+
+  if (!form || !saveBtn) return
+
+  let currentPhotoDataUrl = ''
+
+  if (photoInput) {
+    photoInput.addEventListener('change', async () => {
+      const file = photoInput.files?.[0]
+      if (!file) return
+      if (file.size > 10485760) { showOfferStatus('Файлът е твърде голям (макс. 10MB)', 'error'); return }
+      if (!file.type.startsWith('image/')) { showOfferStatus('Моля, качи снимка (JPG, PNG, WebP)', 'error'); return }
+      try {
+        const dataUrl = await toDataUrl(file)
+        currentPhotoDataUrl = dataUrl
+        if (photoPlaceholder) photoPlaceholder.hidden = true
+        if (photoPreview) { photoPreview.src = dataUrl; photoPreview.hidden = false }
+      } catch (err) {
+        showOfferStatus(err instanceof Error ? err.message : 'Грешка при зареждане', 'error')
+      }
+    })
+  }
+
+  function showOfferStatus(message, type) {
+    if (!status) return
+    status.textContent = message
+    status.className = 'form-status'
+    if (type === 'error') status.classList.add('form-status-error')
+    if (type === 'success') status.classList.add('form-status-success')
+  }
+
+  function saveOffer(offer) {
+    const arr = safeJsonParse(localStorage.getItem('mp_offers'), [])
+    arr.unshift(offer)
+    localStorage.setItem('mp_offers', JSON.stringify(arr.slice(0, 50)))
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    saveBtn.disabled = true
+
+    const fd = new FormData(form)
+    const product = String(fd.get('product') || '').trim()
+    const quantity = String(fd.get('quantity') || '').trim()
+    const priceRaw = String(fd.get('price') || '').trim().replace(',', '.')
+    const price = Number(priceRaw)
+    const region = String(fd.get('region') || '').trim()
+    const description = String(fd.get('description') || '').trim()
+
+    if (!product) { showOfferStatus('Моля, въведи име на продукта.', 'error'); saveBtn.disabled = false; return }
+    if (!quantity) { showOfferStatus('Моля, въведи количество.', 'error'); saveBtn.disabled = false; return }
+    if (!Number.isFinite(price) || price <= 0) { showOfferStatus('Моля, въведи валидна цена.', 'error'); saveBtn.disabled = false; return }
+    if (!currentPhotoDataUrl) { showOfferStatus('Моля, качи снимка на продукта.', 'error'); saveBtn.disabled = false; return }
+
+    const offer = {
+      id: crypto?.randomUUID?.() || String(Date.now()),
+      product, region,
+      quantity: `${quantity} кг`,
+      price: `${price.toFixed(2)} лв.`,
+      description,
+      photoDataUrl: currentPhotoDataUrl,
+      createdAt: new Date().toISOString(),
+      sellerName: profile?.name || '',
+      sellerEmail: profile?.email || '',
+      sellerPhone: profile?.phone || '',
+    }
+
+    saveOffer(offer)
+    showOfferStatus('Обявата е публикувана! ✓', 'success')
+
+    // Reset form
+    form.reset()
+    currentPhotoDataUrl = ''
+    if (photoPlaceholder) photoPlaceholder.hidden = false
+    if (photoPreview) { photoPreview.src = ''; photoPreview.hidden = true }
+    saveBtn.disabled = false
+
+    // Refresh results
+    setTimeout(() => {
+      const q = parseForm()
+      render(filterItems(q))
+      showOfferStatus('', '')
+    }, 2000)
+  })
 }
 
-function onReset() {
-  els.form.reset()
-  els.resultsGrid.innerHTML = ''
-  els.emptyState.hidden = true
-  if (els.resultsMeta) els.resultsMeta.textContent = ''
-}
-
+// ── INIT ──
 function init() {
   if (!els.form) return
 
@@ -213,13 +291,23 @@ function init() {
   if (els.brandLink) {
     els.brandLink.addEventListener('click', (e) => {
       const href = els.brandLink.getAttribute('href') || ''
-      if (href.endsWith('Homepage.html')) {
-        e.preventDefault()
-      }
+      if (href.endsWith('Homepage.html')) e.preventDefault()
     })
   }
-  els.form.addEventListener('submit', onSubmit)
-  if (els.resetBtn) els.resetBtn.addEventListener('click', onReset)
+
+  els.form.addEventListener('submit', (e) => {
+    e.preventDefault()
+    render(filterItems(parseForm()))
+  })
+
+  if (els.resetBtn) els.resetBtn.addEventListener('click', () => {
+    els.form.reset()
+    els.resultsGrid.innerHTML = ''
+    els.emptyState.hidden = true
+    if (els.resultsMeta) els.resultsMeta.textContent = ''
+  })
+
+  initOfferForm()
 }
 
 init()
