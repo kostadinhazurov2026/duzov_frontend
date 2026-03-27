@@ -1,0 +1,12 @@
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+}
