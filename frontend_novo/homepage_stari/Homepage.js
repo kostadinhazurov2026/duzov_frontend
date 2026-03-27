@@ -132,7 +132,29 @@ function parseForm() {
   }
 }
 
-function filterItems(q) {
+async function searchOffers(query) {
+  try {
+    const params = new URLSearchParams();
+    if (query.product) params.append('product', query.product);
+    if (query.location) params.append('location', query.location);
+    if (query.quantity) params.append('quantity', query.quantity);
+    if (query.maxPrice && Number.isFinite(query.maxPrice)) params.append('maxPrice', query.maxPrice.toString());
+
+    const response = await fetch(`/api/offers/search?${params.toString()}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const offers = await response.json();
+    return offers.map(normalizeOffer);
+  } catch (error) {
+    console.error('Error searching offers:', error);
+    // Fallback to localStorage if API fails
+    return filterItemsLocal(query);
+  }
+}
+
+function filterItemsLocal(q) {
   const parsedQueryQty = parseQuantity(q.quantity)
   return [...loadOffers(), ...SEED.items]
     .filter(it => !q.product || String(it.product || '').toLowerCase().includes(q.product))
@@ -148,41 +170,49 @@ function filterItems(q) {
     })
 }
 
-function render(items) {
-  els.resultsGrid.innerHTML = ''
-  els.emptyState.hidden = true
-  if (els.resultsMeta) els.resultsMeta.textContent = items.length ? `Намерени: ${items.length}` : ''
+async function render(query) {
+  try {
+    const items = await searchOffers(query);
+    els.resultsGrid.innerHTML = ''
+    els.emptyState.hidden = true
+    if (els.resultsMeta) els.resultsMeta.textContent = items.length ? `Намерени: ${items.length}` : ''
 
-  if (!items.length) { els.emptyState.hidden = false; return }
+    if (!items.length) { els.emptyState.hidden = false; return }
 
-  els.resultsGrid.innerHTML = items.map((it, i) => {
-    const isFarmer = it.type === 'farmer'
-    const title = isFarmer ? it.name : it.title
-    const badge = isFarmer ? 'Производител' : 'Обява'
-    return `
-      <article class="ad-card" style="animation-delay:${Math.min(i * 60, 260)}ms">
-        <div class="ad-image-box">${escapeHtml(it.product || 'Продукт')}</div>
-        <div class="ad-details">
-          <div class="ad-topline">
-            <h3>${escapeHtml(title)}</h3>
-            <span class="badge">${badge}</span>
+    els.resultsGrid.innerHTML = items.map((it, i) => {
+      const isFarmer = it.type === 'farmer'
+      const title = isFarmer ? it.name : it.title
+      const badge = isFarmer ? 'Производител' : 'Обява'
+      return `
+        <article class="ad-card" style="animation-delay:${Math.min(i * 60, 260)}ms">
+          <div class="ad-image-box">${escapeHtml(it.product || 'Продукт')}</div>
+          <div class="ad-details">
+            <div class="ad-topline">
+              <h3>${escapeHtml(title)}</h3>
+              <span class="badge">${badge}</span>
+            </div>
+            <p>${escapeHtml(it.location || '')}</p>
+            <div class="ad-footer">
+              <span class="price-tag">${escapeHtml(Number(it.price).toFixed(2))} лв.</span>
+              <span class="unit-tag">за ${escapeHtml(unitText(it.unit))}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-chip">Продукт: ${escapeHtml(it.product)}</span>
+              ${it.quantityLabel ? `<span class="meta-chip">Количество: ${escapeHtml(it.quantityLabel)}</span>` : ''}
+              <span class="meta-chip">Рейтинг: ${escapeHtml(Number(it.rating).toFixed(1))}</span>
+              ${(it.tags || []).slice(0, 2).map(t => `<span class="meta-chip">${escapeHtml(t)}</span>`).join('')}
+            </div>
           </div>
-          <p>${escapeHtml(it.location || '')}</p>
-          <div class="ad-footer">
-            <span class="price-tag">${escapeHtml(Number(it.price).toFixed(2))} лв.</span>
-            <span class="unit-tag">за ${escapeHtml(unitText(it.unit))}</span>
-          </div>
-          <div class="meta-row">
-            <span class="meta-chip">Продукт: ${escapeHtml(it.product)}</span>
-            ${it.quantityLabel ? `<span class="meta-chip">Количество: ${escapeHtml(it.quantityLabel)}</span>` : ''}
-            <span class="meta-chip">Рейтинг: ${escapeHtml(Number(it.rating).toFixed(1))}</span>
-            ${(it.tags || []).slice(0, 2).map(t => `<span class="meta-chip">${escapeHtml(t)}</span>`).join('')}
-          </div>
-        </div>
-      </article>`
-  }).join('')
+        </article>`
+    }).join('')
 
-  els.resultsScroll.scrollTo({ top: 0, behavior: 'smooth' })
+    els.resultsScroll.scrollTo({ top: 0, behavior: 'smooth' })
+  } catch (error) {
+    console.error('Error rendering results:', error);
+    // Show error state
+    els.resultsGrid.innerHTML = '<div class="error-message">Грешка при зареждане на резултатите. Моля опитайте отново.</div>';
+    els.emptyState.hidden = true;
+  }
 }
 
 // ── OFFER FORM ──
@@ -271,9 +301,9 @@ function initOfferForm() {
     saveBtn.disabled = false
 
     // Refresh results
-    setTimeout(() => {
+    setTimeout(async () => {
       const q = parseForm()
-      render(filterItems(q))
+      await render(q)
       showOfferStatus('', '')
     }, 2000)
   })
@@ -295,9 +325,9 @@ function init() {
     })
   }
 
-  els.form.addEventListener('submit', (e) => {
+  els.form.addEventListener('submit', async (e) => {
     e.preventDefault()
-    render(filterItems(parseForm()))
+    await render(parseForm())
   })
 
   if (els.resetBtn) els.resetBtn.addEventListener('click', () => {

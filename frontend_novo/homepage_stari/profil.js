@@ -1,5 +1,15 @@
-function safeJsonParse(s, fallback) {
-  try { return JSON.parse(s) } catch { return fallback }
+async function loadProfileFromAPI() {
+  try {
+    const response = await fetch('/api/profile');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const profile = await response.json();
+    return profile;
+  } catch (error) {
+    console.error('Error loading profile from API:', error);
+    return null;
+  }
 }
 
 function validateEmail(email) {
@@ -7,7 +17,7 @@ function validateEmail(email) {
   return re.test(email)
 }
 
-function init() {
+async function init() {
   const form = document.getElementById('profileForm')
   const imageInput = document.getElementById('pfImage')
   const nameInput = document.getElementById('pfName')
@@ -18,7 +28,15 @@ function init() {
   if (!form) return
 
   // Load existing profile data
-  const existing = safeJsonParse(localStorage.getItem('mp_profile'), null)
+  const loadProfile = async () => {
+    let existing = await loadProfileFromAPI();
+    if (!existing) {
+      existing = safeJsonParse(localStorage.getItem('mp_profile'), null);
+    }
+    return existing;
+  };
+
+  const existing = await loadProfile();
   const loginEmail = localStorage.getItem('user_email') || sessionStorage.getItem('user_email')
   
   if (existing) {
@@ -65,7 +83,7 @@ function init() {
     }
   }
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault()
     
     const name = (nameInput?.value || '').trim()
@@ -95,8 +113,14 @@ function init() {
       updatedAt: new Date().toISOString(),
     }
 
-    localStorage.setItem('mp_profile', JSON.stringify(profile))
-    showStatus('Профилът е запазен успешно! ✓', 'success')
+    try {
+      await saveProfile(profile)
+      localStorage.setItem('mp_profile', JSON.stringify(profile)) // Keep local copy for offline access
+      showStatus('Профилът е запазен успешно! ✓', 'success')
+    } catch (error) {
+      showStatus('Грешка при запазване на профила. Моля опитайте отново.', 'error')
+      return
+    }
 
     setTimeout(() => {
       if (status) {
@@ -108,7 +132,7 @@ function init() {
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init)
+  document.addEventListener('DOMContentLoaded', () => init())
 } else {
   init()
 }

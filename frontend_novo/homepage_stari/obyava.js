@@ -15,10 +15,26 @@ function loadProfile() {
   return safeJsonParse(localStorage.getItem('mp_profile'), null)
 }
 
-function saveOffer(offer) {
-  const arr = safeJsonParse(localStorage.getItem('mp_offers'), [])
-  arr.unshift(offer)
-  localStorage.setItem('mp_offers', JSON.stringify(arr.slice(0, 50)))
+async function publishOffer(offer) {
+  try {
+    const response = await fetch('/api/offers', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(offer)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Error publishing offer:', error);
+    throw error;
+  }
 }
 
 function init() {
@@ -28,6 +44,7 @@ function init() {
   const photoInput = document.getElementById('offerPhoto')
   const photoPlaceholder = document.getElementById('offerPhotoPlaceholder')
   const photoPreview = document.getElementById('offerPhotoPreview')
+  const photoChangeBtn = document.getElementById('offerPhotoChange')
   const profile = loadProfile()
 
   if (!form || !saveBtn) return
@@ -56,30 +73,112 @@ function init() {
         const dataUrl = await toDataUrl(file)
         currentPhotoDataUrl = dataUrl
         
-        // Hide placeholder, show preview
-        if (photoPlaceholder) photoPlaceholder.hidden = true
+        // Hide placeholder and show preview in the same space
+        if (photoPlaceholder) photoPlaceholder.style.opacity = '0'
         if (photoPreview) {
           photoPreview.src = dataUrl
+          photoPreview.classList.add('show')
           photoPreview.hidden = false
         }
+        if (photoChangeBtn) photoChangeBtn.style.display = 'flex'
       } catch (err) {
         showStatus(err instanceof Error ? err.message : 'Проблем при заредване', 'error')
       }
     })
   }
 
+  // Real-time validation
+  const inputs = [offerProduct, offerPrice, offerQty, offerRegion]
+  inputs.forEach(input => {
+    if (input) {
+      input.addEventListener('blur', () => {
+        validateField(input)
+      })
+      
+      input.addEventListener('input', () => {
+        clearFieldError(input)
+      })
+    }
+  })
+
+  function validateField(input) {
+    const value = input.value.trim()
+    const fieldName = input.getAttribute('name')
+    
+    // Remove existing error styling
+    input.classList.remove('field-error')
+    
+    // Basic validation
+    if (input.hasAttribute('required') && !value) {
+      showFieldError(input, 'Това поле е задължително')
+      return false
+    }
+    
+    if (fieldName === 'price' && value) {
+      const price = parseFloat(value.replace(',', '.'))
+      if (isNaN(price) || price <= 0) {
+        showFieldError(input, 'Въведете валидна цена')
+        return false
+      }
+    }
+    
+    if (fieldName === 'quantity' && value) {
+      const qty = parseFloat(value.replace(',', '.'))
+      if (isNaN(qty) || qty <= 0) {
+        showFieldError(input, 'Въведете валидно количество')
+        return false
+      }
+    }
+    
+    return true
+  }
+
+  function showFieldError(input, message) {
+    input.classList.add('field-error')
+    // You could add a tooltip or error message display here
+  }
+
+  function clearFieldError(input) {
+    input.classList.remove('field-error')
+  }
+
   function showStatus(message, type) {
     if (status) {
       status.textContent = message
       status.className = 'form-status'
+      status.classList.add('show')
       if (type === 'error') status.classList.add('form-status-error')
       if (type === 'success') status.classList.add('form-status-success')
+      
+      // Auto-hide success messages after 3 seconds
+      if (type === 'success') {
+        setTimeout(() => {
+          status.classList.remove('show')
+        }, 3000)
+      }
     }
   }
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault()
-    if (saveBtn) saveBtn.disabled = true
+    
+    // Validate all fields before submission
+    let isValid = true
+    inputs.forEach(input => {
+      if (!validateField(input)) {
+        isValid = false
+      }
+    })
+    
+    if (!isValid) {
+      showStatus('Моля попълнете всички задължителни полета правилно.', 'error')
+      return
+    }
+    
+    if (saveBtn) {
+      saveBtn.disabled = true
+      saveBtn.textContent = 'Публикуване...'
+    }
 
     const fd = new FormData(form)
     const product = String(fd.get('product') || '').trim()
@@ -128,11 +227,33 @@ function init() {
       sellerPhone: profile?.phone || '',
     }
 
-    saveOffer(offer)
-    showStatus('Обявата е публикувана успешно! ✓', 'success')
+    try {
+      await publishOffer(offer)
+      showStatus('Обявата е публикувана успешно! ✓', 'success')
+    } catch (error) {
+      showStatus('Грешка при публикуване на обявата. Моля опитайте отново.', 'error')
+      if (saveBtn) {
+        saveBtn.disabled = false
+        saveBtn.textContent = 'Публикувай обява'
+      }
+      return
+    }
     
+    // Reset form after successful submission
     setTimeout(() => {
-      window.location.href = 'Homepage.html'
+      form.reset()
+      currentPhotoDataUrl = ''
+      if (photoPlaceholder) photoPlaceholder.style.opacity = '1'
+      if (photoPreview) {
+        photoPreview.classList.remove('show')
+        photoPreview.hidden = true
+      }
+      if (photoChangeBtn) photoChangeBtn.style.display = 'none'
+      
+      if (saveBtn) {
+        saveBtn.disabled = false
+        saveBtn.textContent = 'Публикувай обява'
+      }
     }, 1500)
   })
 }

@@ -45,6 +45,10 @@
                             </div>
                             <img id="offerPhotoPreview" class="offer-image-preview" alt="Преглед" hidden>
                         </label>
+                        <button type="button" id="offerPhotoChange" class="offer-image-change" title="Смени снимка">↻</button>
+                    </div>
+                    <div class="offer-image-actions">
+                        <button type="submit" id="offerSaveBtn" class="btn btn-secondary btn-publish-main">Публикувай обява</button>
                     </div>
                 </div>
 
@@ -57,14 +61,14 @@
                     <div class="offer-details-vertical">
                         <div class="offer-field">
                             <label for="offerProduct">Име на продукта</label>
-                            <input id="offerProduct" name="product" class="styled-input" placeholder="Въведи текст тук" required>
+                            <div class="dropdown-wrap">
+                                <input id="offerProduct" name="product" class="styled-input" placeholder="Въведи текст тук" required autocomplete="off">
+                                <div id="offerProductDropdown" class="dropdown"></div>
+                            </div>
                         </div>
                         <div class="offer-field">
-                            <label for="offerPrice">Цена</label>
-                            <div class="price-wrapper">
-                                <input id="offerPrice" name="price" class="styled-input" placeholder="Въведи текст тук" inputmode="decimal" required>
-                                <span class="price-currency">€</span>
-                            </div>
+                            <label for="offerPrice">Цена (€)</label>
+                            <input id="offerPrice" name="price" class="styled-input" placeholder="Въведи цена в евро" inputmode="decimal" required>
                         </div>
                         <div class="offer-field">
                             <label for="offerQty">Количество</label>
@@ -73,7 +77,7 @@
                                 <span class="quantity-unit">кг</span>
                             </div>
                         </div>
-                        <div class="offer-field">
+                        <div class="offer-field offer-field-description">
                             <label for="offerDescription">Описание</label>
                             <textarea id="offerDescription" name="description" class="styled-textarea" placeholder="Въведи описание тук" rows="4"></textarea>
                         </div>
@@ -94,9 +98,6 @@
 
                 <!-- Status and Actions -->
                 <p id="offerStatus" class="form-status" aria-live="polite"></p>
-                <div class="offer-actions">
-                    <button type="submit" id="offerSaveBtn" class="btn btn-primary btn-publish">Публикувай обява</button>
-                </div>
             </form>
         </section>
     </main>
